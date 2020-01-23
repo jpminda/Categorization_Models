@@ -22,41 +22,30 @@ Stim = np.loadtxt("54taskStm.txt",  delimiter=" ")
 
 #an array of the weights in the task, corresponds to numDim
 weights = np.array ([.25, .25, .25, .25])
-sens = 6
+sens = 3
 SharedTraits = np.zeros(NumDim)
 SimA = np.zeros(NumTotalStim)
 SimB = np.zeros(NumTotalStim)
 probs = np.zeros(NumTotalStim)
 
-thismult = 0
-cummulta = 0
-cummultb = 0
 
-for ThisStim in range(NumTotalStim):
-	for ThisTrainStim in range(NumTrainStim):
+for ThisStim in range(NumTotalStim): #loop through all of the stimuli
+	for ThisTrainStim in range(NumAStim): #compare the stimulus to be classified with the As
+		DistA = np.zeros(NumDim)
 		for ThisDim in range(NumDim):
-			if Stim[ThisStim, ThisDim] == Stim[ThisTrainStim, ThisDim]: 
-				SharedTraits[ThisDim] = 0
-			else:
-				SharedTraits[ThisDim] = weights[ThisDim]
+			DistA[ThisDim] = DistA[ThisDim] + (weights[ThisDim]) * abs(Stim[ThisStim,ThisDim] - Stim[ThisTrainStim,ThisDim])
+		SimA[ThisStim] = SimA[ThisStim] + np.exp(-sens * sum(DistA))
+	
+	for ThisTrainStim in range((NumAStim), NumTrainStim): #compare the stimulus to be classified with the Bs
+		DistB = np.zeros(NumDim)
 		for ThisDim in range(NumDim):
-			thismult = thismult + SharedTraits[ThisDim]
-		if ThisTrainStim <= NumAStim:
-			cummulta = cummulta + np.exp(-sens * thismult)
-		else:
-			cummultb = cummultb + np.exp(-sens * thismult)
-		thismult = 0.0
-		for ThisDim in range(NumDim):
-			SharedTraits[ThisDim] = 0.0
-	SimA[ThisStim] = cummulta
-	SimB[ThisStim] = cummultb
-	cummulta = 0
-	cummultb = 0
+			DistB[ThisDim] = DistB[ThisDim] + (weights[ThisDim]) * abs(Stim[ThisStim,ThisDim] - Stim[ThisTrainStim,ThisDim])
+		SimB[ThisStim] = SimB[ThisStim] + np.exp(-sens * sum(DistB))
 
 for ThisStim in range(NumTotalStim):
 	probs[ThisStim] = SimA[ThisStim] / (SimA[ThisStim] + SimB[ThisStim])
 
-probs = np.vstack(probs)
+probs = np.vstack(probs) #This command just make the array print up at as a column of numbers
 print(np.round(probs,3))
 
 plt.show(plt.plot(probs))
